@@ -4,7 +4,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { clerkMiddleware } from '@clerk/clerk-express';
 import clerkWebhook from './controllers/clerkWebhooks.js';
-
 import connectDB from './config/db.js'; 
 
 dotenv.config();
@@ -13,7 +12,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:5173'], // Add your frontend URLs
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://safestay.vercel.app'], // Add your frontend URLs
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
   optionsSuccessStatus: 200
@@ -21,21 +20,19 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions));
-
 app.use(express.json());
 
+// Clerk middleware with secret key
+app.use(clerkMiddleware({
+  secretKey: process.env.CLERK_SECRET_KEY
+}));
 
-
-
-app.use(clerkMiddleware());
-
-//api to listen clerk webhook
-app.use('/api/clerk',clerkWebhook);
-
-app.post('/webhook',clerkWebhook);
+// Webhook endpoint for Clerk events
+app.post('/api/clerk/webhook', clerkWebhook);
 
 // MongoDB Connection
 connectDB();
+
 // Basic route
 app.get('/', (req, res) => {
   res.send('Welcome to the Hotel Management API');
