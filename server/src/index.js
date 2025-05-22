@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { clerkMiddleware } from '@clerk/clerk-express';
+import { clerkMiddleware } from '@clerk/express';
 import clerkWebhook from './controllers/clerkWebhooks.js';
 import connectDB from './config/db.js'; 
 
