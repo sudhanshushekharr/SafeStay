@@ -1,110 +1,91 @@
-const Room = require('../models/Room');
+import Room from '../models/Room.js';
+import Hotel from '../models/Hotel.js';
+import cloudinary from '../config/cloudinary.js';
 
-// Get all rooms
-exports.getAllRooms = async (req, res) => {
+//API to create a new room for a hotel
+export const createRoom = async (req, res) => {
   try {
-    const rooms = await Room.find().populate('hotelOwner', 'name email');
-    res.json(rooms);
+    const { roomType, pricePerNight, amenities, maxOccupancy } = req.body;
+  
+    const hotel = await Hotel.findOne({ owner: req.auth.userId });
+
+    if (!hotel) {
+      return res.status(404).json({ success: false, message: "Hotel not found" });
+    }
+
+    //upload images to cloudinary
+    const uploadImages = req.files.map(async (file) => {
+      const result = await cloudinary.uploader.upload(file.path);
+      return result.secure_url;
+    });
+     
+    //wait for all images to be uploaded
+    const images = await Promise.all(uploadImages);
+
+    //create room storing in database
+    const room = await Room.create({
+      hotel: hotel._id,
+      roomType,
+      pricePerNight: +pricePerNight,
+      amenities: JSON.parse(amenities),
+      maxOccupancy,
+      images
+    });
+
+    res.status(201).json({ success: true, message: "Room created successfully", room });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Get room by ID
-exports.getRoomById = async (req, res) => {
+//api to get all rooms
+export const getAllRooms = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id).populate('hotelOwner', 'name email');
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
-    res.json(room);
+    const rooms = await Room.find({ isAvailable: true })
+      .populate({
+        path: 'hotel',
+        populate: {
+          path: 'owner',
+          select: 'image'
+        }
+      })
+      .sort({ createdAt: -1 });
+    res.status(200).json({ success: true, rooms });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Create new room
-exports.createRoom = async (req, res) => {
+//api to get all rooms for specific hotel
+export const getOwnerRooms = async (req, res) => {
   try {
-    const roomData = {
-      ...req.body,
-      hotelOwner: req.auth.userId // Get user ID from Clerk session
-    };
-    
-    const room = new Room(roomData);
-    const savedRoom = await room.save();
-    res.status(201).json(savedRoom);
+    const hotelData = await Hotel.findOne({ owner: req.auth.userId });
+    if (!hotelData) {
+      return res.status(404).json({ success: false, message: "Hotel not found" });
+    }
+    const rooms = await Room.find({ hotel: hotelData._id.toString() }).populate("hotel");
+    res.status(200).json({ success: true, rooms });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Update room
-exports.updateRoom = async (req, res) => {
+//api to toggle room availability
+export const toggleRoomAvailability = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
-    
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
-    
-    // Check if user is the room owner
-    if (room.hotelOwner.toString() !== req.auth.userId) {
-      return res.status(403).json({ message: 'Not authorized to update this room' });
-    }
-    
-    const updatedRoom = await Room.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    
-    res.json(updatedRoom);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-// Delete room
-exports.deleteRoom = async (req, res) => {
-  try {
-    const room = await Room.findById(req.params.id);
-    
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
-    
-    // Check if user is the room owner
-    if (room.hotelOwner.toString() !== req.auth.userId) {
-      return res.status(403).json({ message: 'Not authorized to delete this room' });
-    }
-    
-    await Room.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Room deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Toggle room availability
-exports.toggleAvailability = async (req, res) => {
-  try {
-    const room = await Room.findById(req.params.id);
+    const { roomId } = req.body;
+    const room = await Room.findById(roomId);
     
     if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
+      return res.status(404).json({ success: false, message: "Room not found" });
     }
-    
-    // Check if user is the room owner
-    if (room.hotelOwner.toString() !== req.auth.userId) {
-      return res.status(403).json({ message: 'Not authorized to update this room' });
-    }
-    
+
     room.isAvailable = !room.isAvailable;
-    const updatedRoom = await room.save();
+    await room.save();
     
-    res.json(updatedRoom);
+    res.status(200).json({ success: true, message: "Room availability toggled successfully", room });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
-}; 
+};
+

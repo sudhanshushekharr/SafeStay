@@ -1,9 +1,16 @@
 import React, { useState } from 'react'
 import Title from '../../components/Title'
 import { assets } from '../../assets/assets'
+import { useAppContext } from '../../context/AppContext'
+import { toast } from 'react-hot-toast'
+
 const AddRoom = () => {
 
+  const {axios, getToken}=useAppContext();
 
+
+  const [loading, setLoading] = useState(false);
+ 
    const [images, setImages] = useState(
     {
       1: null,
@@ -13,6 +20,17 @@ const AddRoom = () => {
      
     }
    )
+const handleSubmit=async(e)=>{
+  e.preventDefault();
+  if(!inputs.roomType || !inputs.pricePerNight || !inputs.amenities || !Object.values(images).some(image => image !== null) ){
+    toast.error('Please fill all fields');
+    return;
+  }
+  setLoading(true);
+ 
+ 
+}
+
 
    const [inputs, setInputs] = useState(
     {
@@ -29,12 +47,13 @@ const AddRoom = () => {
       maxGuests: '',
     }
    )
-  
+   
+    
   return (
     <div>
       
 
-      <form>
+      <form onSubmit={handleSubmit}>
            <Title title="Add Room" align="left" font="outfit"  subtitle="Add a new room to your hotel"/>
             {/* upload area for images */}
             <p className='text-sm font-medium'>Images</p>

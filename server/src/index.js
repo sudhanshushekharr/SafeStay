@@ -5,6 +5,13 @@ import dotenv from 'dotenv';
 import { clerkMiddleware } from '@clerk/express';
 import clerkWebhook from './controllers/clerkWebhooks.js';
 import connectDB from './config/db.js'; 
+import userRouter from './routes/userRoutes.js';
+import hotelrouter from './routes/hotelRoutes.js';
+import connectCloudinary from './config/cloudinary.js';
+import roomRouter from './routes/roomRoutes.js';
+import bookingRouter from './routes/bookingRoutes.js';
+
+
 
 dotenv.config();
 
@@ -22,22 +29,38 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+app.post('/api/clerk/test', (req, res) => {
+  console.log('Test endpoint hit!');
+  res.json({ message: 'Test endpoint hit!' });
+});
+//api to listen to clerk webhook
+app.post('/api/clerk/webhook', clerkWebhook);
 // Clerk middleware with secret key
 app.use(clerkMiddleware({
   secretKey: process.env.CLERK_SECRET_KEY
 }));
 
+
 // Webhook endpoint for Clerk events
-app.post('/api/clerk/webhook', clerkWebhook);
+
 
 // MongoDB Connection
 connectDB();
+connectCloudinary();  
 
 // Basic route
 app.get('/', (req, res) => {
   res.send('Welcome to the Hotel Management API');
 });
 
+//user routes
+app.use('/api/user', userRouter);
+//hotel routes
+app.use('/api/hotels', hotelrouter);
+//room routes
+app.use('/api/rooms', roomRouter);
+//booking routes
+app.use('/api/bookings', bookingRouter);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

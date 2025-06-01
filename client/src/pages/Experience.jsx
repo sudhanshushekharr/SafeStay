@@ -1,6 +1,7 @@
 import React from 'react'
 import Title from '../components/Title'
 
+
 const Experience = () => {
   const experiences = [
     {
@@ -160,6 +161,7 @@ const Experience = () => {
                 View Rooms
               </a>
             </div>
+      
           </div>
         </div>
       </div>

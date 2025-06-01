@@ -1,4 +1,5 @@
 import React from 'react'
+import { useAuth } from "@clerk/clerk-react";
 
 const Bookings = ({ booking }) => {
   if (!booking) return null;
@@ -78,5 +79,16 @@ const Bookings = ({ booking }) => {
     </div>
   );
 };
+
+function ShowTokenButton() {
+  const { getToken } = useAuth();
+
+  const handleClick = async () => {
+    const token = await getToken();
+    alert(token); // or console.log(token)
+  };
+
+  return <button onClick={handleClick}>Show My Clerk Token</button>;
+}
 
 export default Bookings;

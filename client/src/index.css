@@ -1,19 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&display=swap');
 
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
+:root {
   --color-primary: #2C3E50;    /* Deep Navy Blue */
   --color-secondary: #E67E22;  /* Warm Orange */
 }
 
-*{
+* {
   font-family: 'Outfit';
 }
 
-
-
-.font-playflair{
+.font-playflair {
   font-family: 'Playfair' !important;
 }
 

@@ -1,55 +1,24 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+import User from './User.js';
+import Room from './Room.js';
+import Hotel from './Hotel.js';
 
 const bookingSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  room: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Room',
-    required: true
-  },
-  checkIn: {
-    type: Date,
-    required: true
-  },
-  checkOut: {
-    type: Date,
-    required: true
-  },
-  totalPrice: {
-    type: Number,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'confirmed', 'cancelled', 'completed'],
-    default: 'pending'
-  },
-  guests: {
-    type: Number,
-    required: true,
-    min: 1
-  },
-  specialRequests: {
-    type: String
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  user:{type:String,required:true, ref:"User"},
+  room:{type:String,required:true, ref:"Room"},
+  hotel:{type:String,required:true, ref:"Hotel"},
+  checkInDate:{type:Date,required:true},
+  checkOutDate:{type:Date,required:true},
+  totalPrice:{type:Number,required:true},
+  status:{type:String,
+    enum:["pending","confirmed","cancelled","completed"],
+    default:"pending"},
+  paymentMethod:{type:String,default:"Pay at hotel"},
+  guests:{type:Number,required:true},
+  isPaid:{type:Boolean,default:false},
+},
+{timestamps:true}
+);
 
-// Add validation to ensure checkOut is after checkIn
-bookingSchema.pre('save', function(next) {
-  if (this.checkOut <= this.checkIn) {
-    next(new Error('Check-out date must be after check-in date'));
-  }
-  next();
-});
-
-const Booking = mongoose.model('Booking', bookingSchema);
-
-module.exports = Booking; 
+const Booking=mongoose.model("Booking",bookingSchema);
+export default Booking; 
